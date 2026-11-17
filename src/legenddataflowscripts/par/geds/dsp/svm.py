@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dbetto.catalog import Props
 
-from ....utils import check_input_files
+from legenddataflowscripts.utils import check_input_files
 
 
 def par_geds_dsp_svm() -> None:

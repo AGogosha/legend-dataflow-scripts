@@ -22,7 +22,7 @@ from pygama.pargen.energy_cal import FWHMLinear, FWHMQuadratic, HPGeCalibration
 from pygama.pargen.utils import load_data
 from scipy.stats import binned_statistic
 
-from ....utils import (
+from legenddataflowscripts.utils import (
     build_log,
     check_pulser_mask,
     convert_dict_np_to_float,
@@ -111,7 +111,10 @@ def plot_2614_timemap(
 
     plt.xticks(
         ticks,
-        [datetime.fromtimestamp(tick, tz=UTC).strftime("%H:%M") for tick in ticks],
+        [
+            datetime.fromtimestamp(tick, tz=UTC).strftime("%H:%M")
+            for tick in ticks
+        ],
     )
     plt.close()
     return fig
@@ -181,7 +184,9 @@ def plot_pulser_timemap(
             selection[cal_energy_param],
             bins=[
                 time_bins,
-                np.arange(mean - n_spread * spread, mean + n_spread * spread + dx, dx),
+                np.arange(
+                    mean - n_spread * spread, mean + n_spread * spread + dx, dx
+                ),
             ],
             norm=LogNorm(),
         )
@@ -194,7 +199,10 @@ def plot_pulser_timemap(
 
     plt.xticks(
         ticks,
-        [datetime.fromtimestamp(tick, tz=UTC).strftime("%H:%M") for tick in ticks],
+        [
+            datetime.fromtimestamp(tick, tz=UTC).strftime("%H:%M")
+            for tick in ticks
+        ],
     )
     plt.close()
     return fig
@@ -262,10 +270,16 @@ def bin_pulser_stability(
         }
 
     par_average, _, _ = binned_statistic(
-        selection["timestamp"], select_energies, statistic=get_median, bins=time_bins
+        selection["timestamp"],
+        select_energies,
+        statistic=get_median,
+        bins=time_bins,
     )
     par_error, _, _ = binned_statistic(
-        selection["timestamp"], select_energies, statistic=get_err, bins=time_bins
+        selection["timestamp"],
+        select_energies,
+        statistic=get_err,
+        bins=time_bins,
     )
 
     return {"time": times_average, "energy": par_average, "spread": par_error}
@@ -323,10 +337,16 @@ def bin_stability(
         }
 
     par_average, _, _ = binned_statistic(
-        selection["timestamp"], select_energies, statistic=get_median, bins=time_bins
+        selection["timestamp"],
+        select_energies,
+        statistic=get_median,
+        bins=time_bins,
     )
     par_error, _, _ = binned_statistic(
-        selection["timestamp"], select_energies, statistic=get_err, bins=time_bins
+        selection["timestamp"],
+        select_energies,
+        statistic=get_err,
+        bins=time_bins,
     )
 
     return {"time": times_average, "energy": par_average, "spread": par_error}
@@ -371,7 +391,9 @@ def bin_spectrum(
     bins = np.arange(erange[0], erange[1] + dx, dx)
     return {
         "bins": pgh.get_bin_centers(bins),
-        "counts": np.histogram(data.query(selection_string)[cal_energy_param], bins)[0],
+        "counts": np.histogram(
+            data.query(selection_string)[cal_energy_param], bins
+        )[0],
         "cut_counts": np.histogram(
             data.query(f"(~{cut_field})&(~{pulser_field})")[cal_energy_param],
             bins,
@@ -426,7 +448,11 @@ def bin_survival_fraction(
         data.query(f"(~{cut_field})&(~{pulser_field})")[cal_energy_param],
         bins=np.arange(erange[0], erange[1] + dx, dx),
     )
-    sf = 100 * (counts_pass + 10 ** (-6)) / (counts_pass + counts_fail + 10 ** (-6))
+    sf = (
+        100
+        * (counts_pass + 10 ** (-6))
+        / (counts_pass + counts_fail + 10 ** (-6))
+    )
     return {"bins": pgh.get_bin_centers(bins_pass), "sf": sf}
 
 
@@ -481,7 +507,9 @@ def plot_baseline_timemap(
         data[parameter],
         bins=[
             time_bins,
-            np.arange(mean - n_spread * spread, mean + n_spread * spread + dx, dx),
+            np.arange(
+                mean - n_spread * spread, mean + n_spread * spread + dx, dx
+            ),
         ],
         norm=LogNorm(),
     )
@@ -495,7 +523,10 @@ def plot_baseline_timemap(
 
     plt.xticks(
         ticks,
-        [datetime.fromtimestamp(tick, tz=UTC).strftime("%H:%M") for tick in ticks],
+        [
+            datetime.fromtimestamp(tick, tz=UTC).strftime("%H:%M")
+            for tick in ticks
+        ],
     )
     plt.close()
     return fig
@@ -795,7 +826,11 @@ def par_geds_hit_ecal() -> None:
 
     argparser.add_argument("--log", help="log_file", type=str)
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
@@ -803,17 +838,27 @@ def par_geds_hit_ecal() -> None:
     )
 
     argparser.add_argument(
-        "--det-status", help="detector status", type=str, default="on", required=False
+        "--det-status",
+        help="detector status",
+        type=str,
+        default="on",
+        required=False,
     )
 
-    argparser.add_argument("--table-name", help="table name", type=str, required=True)
+    argparser.add_argument(
+        "--table-name", help="table name", type=str, required=True
+    )
     argparser.add_argument("--channel", help="channel", type=str)
 
-    argparser.add_argument("--plot-path", help="plot_path", type=str, required=False)
+    argparser.add_argument(
+        "--plot-path", help="plot_path", type=str, required=False
+    )
     argparser.add_argument("--save-path", help="save_path", type=str)
     argparser.add_argument("--results-path", help="results_path", type=str)
 
-    argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
+    argparser.add_argument(
+        "-d", "--debug", help="debug_mode", action="store_true"
+    )
     args = argparser.parse_args()
 
     log = build_log(args.log_config, args.log)
@@ -917,7 +962,8 @@ def par_geds_hit_ecal() -> None:
 
     if "cal_energy_params" not in kwarg_dict:
         cal_energy_params = [
-            energy_param + "_cal" for energy_param in kwarg_dict["energy_params"]
+            energy_param + "_cal"
+            for energy_param in kwarg_dict["energy_params"]
         ]
     else:
         cal_energy_params = kwarg_dict["cal_energy_params"]
@@ -932,7 +978,9 @@ def par_geds_hit_ecal() -> None:
     if (
         use_log_pdf
         and "use_log_pdf"
-        not in inspect.signature(HPGeCalibration.hpge_fit_energy_peaks).parameters
+        not in inspect.signature(
+            HPGeCalibration.hpge_fit_energy_peaks
+        ).parameters
     ):
         log.warning("installed pygama does not support use_log_pdf, ignoring")
         use_log_pdf = False
@@ -949,7 +997,9 @@ def par_geds_hit_ecal() -> None:
 
         if len(e_uncal) > 0:
             if isinstance(e_uncal[0], np.ndarray | list):
-                e_uncal = np.concatenate([arr for arr in e_uncal if len(arr) > 0])
+                e_uncal = np.concatenate(
+                    [arr for arr in e_uncal if len(arr) > 0]
+                )
             hist, bins, _ = pgh.get_hist(
                 e_uncal[
                     (e_uncal > np.nanpercentile(e_uncal, 95))
@@ -996,7 +1046,9 @@ def par_geds_hit_ecal() -> None:
                 debug_mode=kwarg_dict.get("debug_mode", False),
             )
             full_object_dict[cal_energy_param].hpge_get_energy_peaks(
-                e_uncal, etol_kev=5 if args.det_status == "on" else 30, n_sigma=2
+                e_uncal,
+                etol_kev=5 if args.det_status == "on" else 30,
+                n_sigma=2,
             )
         got_peaks_kev = full_object_dict[cal_energy_param].peaks_kev.copy()
         if args.det_status != "on":
@@ -1056,11 +1108,18 @@ def par_geds_hit_ecal() -> None:
         )
 
         results_dict[cal_energy_param] = get_results_dict(
-            full_object_dict[cal_energy_param], data, cal_energy_param, selection_string
+            full_object_dict[cal_energy_param],
+            data,
+            cal_energy_param,
+            selection_string,
         )
 
         hit_dict.update(
-            {cal_energy_param: full_object_dict[cal_energy_param].gen_pars_dict()}
+            {
+                cal_energy_param: full_object_dict[
+                    cal_energy_param
+                ].gen_pars_dict()
+            }
         )
 
         if args.plot_path:
@@ -1118,7 +1177,9 @@ def par_geds_hit_ecal() -> None:
             ):
                 peak_dict["function"] = peak_dict["function"].name
                 peak_dict["parameters"] = peak_dict["parameters"].to_dict()
-                peak_dict["uncertainties"] = peak_dict["uncertainties"].to_dict()
+                peak_dict["uncertainties"] = peak_dict[
+                    "uncertainties"
+                ].to_dict()
 
     if "copy_calibration" in kwarg_dict:
         for cal_par, copy_dict in kwarg_dict["copy_calibration"].items():
@@ -1132,9 +1193,9 @@ def par_geds_hit_ecal() -> None:
                 msg = f"copy_calibration parameter {cal_par} already exists in full_object_dict"
                 raise ValueError(msg)
             new_dict = {cal_par: copy.deepcopy(hit_dict[copy_cal_param])}
-            new_dict[cal_par]["expression"] = new_dict[cal_par]["expression"].replace(
-                old_input_param, new_input_param
-            )
+            new_dict[cal_par]["expression"] = new_dict[cal_par][
+                "expression"
+            ].replace(old_input_param, new_input_param)
             hit_dict.update({cal_par: new_dict[cal_par]})
 
     if "extra_blocks" in kwarg_dict:
@@ -1186,7 +1247,10 @@ def par_geds_hit_ecal() -> None:
 
     # save output dictionary
     output_dict = convert_dict_np_to_float(
-        {"pars": hit_dict, "results": dict(**in_results_dict, ecal=results_dict)}
+        {
+            "pars": hit_dict,
+            "results": dict(**in_results_dict, ecal=results_dict),
+        }
     )
     Props.write_to(args.save_path, output_dict)
 

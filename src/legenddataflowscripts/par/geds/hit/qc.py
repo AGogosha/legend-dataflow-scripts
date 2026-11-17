@@ -19,7 +19,7 @@ from pygama.pargen.data_cleaning import (
 )
 from pygama.pargen.utils import load_data
 
-from ....utils import (
+from legenddataflowscripts.utils import (
     build_log,
     check_pulser_mask,
     convert_dict_np_to_float,
@@ -105,22 +105,26 @@ def build_qc(
     )
     if kwarg_dict_fft is not None:
         cut_fields += get_keys(
-            [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
+            [
+                key.replace(search_name, "")
+                for key in ls(cal_files[0], search_name)
+            ],
             kwarg_dict_fft["cut_parameters"],
         )
 
     if "initial_cal_cuts" in config:
         init_cal = config["initial_cal_cuts"]
         cut_fields += get_keys(
-            [key.replace(search_name, "") for key in ls(cal_files[0], search_name)],
+            [
+                key.replace(search_name, "")
+                for key in ls(cal_files[0], search_name)
+            ],
             init_cal["cut_parameters"],
         )
 
     if len(fft_files) > 0:
         if kwarg_dict_fft is None:
-            msg = (
-                "fft files were provided but the qc config has no 'fft_fields' section"
-            )
+            msg = "fft files were provided but the qc config has no 'fft_fields' section"
             raise ValueError(msg)
         fft_data = load_data(
             fft_files,
@@ -139,7 +143,9 @@ def build_qc(
             timestamps, discharge_timestamps
         )
 
-        msg = f"{len(fft_data.query('is_recovering'))} discharge recovery events"
+        msg = (
+            f"{len(fft_data.query('is_recovering'))} discharge recovery events"
+        )
         log.info(msg)
 
         hit_dict_fft = {}
@@ -219,7 +225,9 @@ def build_qc(
     discharges = data["t_sat_lo"].to_numpy() > 0
     timestamps = data["timestamp"].to_numpy()
     discharge_timestamps = np.where(timestamps[discharges])[0]
-    data["is_recovering"] = get_is_recovering_mask(timestamps, discharge_timestamps)
+    data["is_recovering"] = get_is_recovering_mask(
+        timestamps, discharge_timestamps
+    )
 
     msg = f"{len(data.query('is_recovering'))} discharge recovery events"
     log.info(msg)
@@ -245,12 +253,18 @@ def build_qc(
             # convert to pandas eval
             exp = info["expression"]
             for key in info.get("parameters", {}):
-                exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
-            data[outname] = data.eval(exp, local_dict=info.get("parameters", {}))
+                exp = re.sub(
+                    f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp
+                )
+            data[outname] = data.eval(
+                exp, local_dict=info.get("parameters", {})
+            )
             if "classifier" not in outname:
                 ct_mask = ct_mask & data[outname]
 
-        mask = mask[ct_mask[(~data["is_pulser"] & ~data["is_recovering"]).to_numpy()]]
+        mask = mask[
+            ct_mask[(~data["is_pulser"] & ~data["is_recovering"]).to_numpy()]
+        ]
         data = data[ct_mask]
         log.debug("initial cal cuts applied")
         msg = f"cut_dict is: {json.dumps(convert_dict_np_to_float(hit_dict_init_cal), indent=2)}"
@@ -286,20 +300,24 @@ def build_qc(
         # convert to pandas eval
         exp = info["expression"]
         for key in info.get("parameters", {}):
-            exp = re.sub(f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp)
+            exp = re.sub(
+                f"(?<![a-zA-Z0-9]){key}(?![a-zA-Z0-9])", f"@{key}", exp
+            )
         if fft_data is not None and outname not in fft_data:
             fft_data[outname] = fft_data.eval(
                 exp, local_dict=info.get("parameters", {})
             )
         if outname not in data:
-            data[outname] = data.eval(exp, local_dict=info.get("parameters", {}))
+            data[outname] = data.eval(
+                exp, local_dict=info.get("parameters", {})
+            )
 
     qc_results = {}
     for entry in hit_dict:
         if "classifier" not in entry:
-            sf_cal = len(data.query(f"{entry}& ~is_pulser & ~is_recovering")) / len(
-                data.query("~is_pulser & ~is_recovering")
-            )
+            sf_cal = len(
+                data.query(f"{entry}& ~is_pulser & ~is_recovering")
+            ) / len(data.query("~is_pulser & ~is_recovering"))
             sf_cal_err = 100 * np.sqrt(
                 ((sf_cal) * (1 - sf_cal))
                 / len(data.query("~is_pulser & ~is_recovering"))
@@ -318,7 +336,8 @@ def build_qc(
                     fft_data.query("~is_recovering")
                 )
                 sf_fft_err = 100 * np.sqrt(
-                    ((sf_fft) * (1 - sf_fft)) / len(fft_data.query("~is_recovering"))
+                    ((sf_fft) * (1 - sf_fft))
+                    / len(fft_data.query("~is_recovering"))
                 )
                 sf_fft *= 100
                 msg = f"{entry} cut applied: {sf_fft:.2f}% of events passed the cut for fft data"
@@ -399,16 +418,24 @@ def par_geds_hit_qc() -> None:
 
     argparser.add_argument("--log", help="log_file", type=str)
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
         "--config-file", help="Config file", type=str, nargs="*", required=True
     )
 
-    argparser.add_argument("--table-name", help="table name", type=str, required=True)
+    argparser.add_argument(
+        "--table-name", help="table name", type=str, required=True
+    )
 
-    argparser.add_argument("--plot-path", help="plot_path", type=str, required=False)
+    argparser.add_argument(
+        "--plot-path", help="plot_path", type=str, required=False
+    )
     argparser.add_argument("--save-path", help="save_path", type=str)
     args = argparser.parse_args()
 
@@ -429,7 +456,10 @@ def par_geds_hit_qc() -> None:
         overwrite = None
 
     # an empty fft filelist is legitimate (no fft runs for this period)
-    if len(args.fft_files) == 1 and Path(args.fft_files[0]).suffix == ".filelist":
+    if (
+        len(args.fft_files) == 1
+        and Path(args.fft_files[0]).suffix == ".filelist"
+    ):
         with Path(args.fft_files[0]).open() as f:
             fft_files = [line for line in map(str.strip, f) if line]
     else:

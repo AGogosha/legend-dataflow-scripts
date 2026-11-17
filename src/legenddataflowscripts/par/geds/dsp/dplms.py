@@ -15,7 +15,7 @@ from pygama.pargen.data_cleaning import generate_cuts
 from pygama.pargen.dplms_ge_dict import dplms_ge_dict
 from pygama.pargen.dsp_optimize import run_one_dsp
 
-from ....utils import (
+from legenddataflowscripts.utils import (
     build_log,
     check_input_files,
     convert_dict_np_to_float,
@@ -31,14 +31,24 @@ mpl.use("agg")  # no display needed; avoids X11 when DISPLAY is set
 
 def _build_argparser(description: str) -> argparse.ArgumentParser:
     argparser = argparse.ArgumentParser(description=description)
-    argparser.add_argument("--fft-raw-filelist", help="fft_raw_filelist", type=str)
-    argparser.add_argument("--peak-file", help="tcm_filelist", type=str, required=True)
+    argparser.add_argument(
+        "--fft-raw-filelist", help="fft_raw_filelist", type=str
+    )
+    argparser.add_argument(
+        "--peak-file", help="tcm_filelist", type=str, required=True
+    )
     argparser.add_argument("--inplots", help="in_plot_path", type=str)
-    argparser.add_argument("--database", help="database", type=str, required=True)
+    argparser.add_argument(
+        "--database", help="database", type=str, required=True
+    )
 
     argparser.add_argument("--log", help="log_file", type=str)
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
@@ -57,8 +67,12 @@ def _build_argparser(description: str) -> argparse.ArgumentParser:
         "--raw-table-name", help="raw table name", type=str, required=True
     )
 
-    argparser.add_argument("--dsp-pars", help="dsp_pars", type=str, required=True)
-    argparser.add_argument("--lh5-path", help="lh5_path", type=str, required=True)
+    argparser.add_argument(
+        "--dsp-pars", help="dsp_pars", type=str, required=True
+    )
+    argparser.add_argument(
+        "--lh5-path", help="lh5_path", type=str, required=True
+    )
     argparser.add_argument("--plot-path", help="plot_path", type=str)
 
     return argparser
@@ -102,10 +116,14 @@ def _run_dplms_step(db_key: str, ene_par: str) -> None:
 
     dplms_dict = Props.read_from(args.config_file)
     db_dict = Props.read_from(args.database)
-    require_config_keys(dplms_dict, ["run_dplms"], f"dplms config ({args.config_file})")
+    require_config_keys(
+        dplms_dict, ["run_dplms"], f"dplms config ({args.config_file})"
+    )
 
     if dplms_dict["run_dplms"] is True:
-        fft_files = expand_filelist([args.fft_raw_filelist], "--fft-raw-filelist")
+        fft_files = expand_filelist(
+            [args.fft_raw_filelist], "--fft-raw-filelist"
+        )
 
         t0 = time.time()
         log.info("\nLoad fft data")
@@ -127,7 +145,9 @@ def _run_dplms_step(db_key: str, ene_par: str) -> None:
         peaks_kev = np.array(dplms_dict["peaks_kev"])
 
         peaks_rounded = [int(peak) for peak in peaks_kev]
-        peaks = lh5.read_as(f"{args.raw_table_name}/peak", args.peak_file, library="np")
+        peaks = lh5.read_as(
+            f"{args.raw_table_name}/peak", args.peak_file, library="np"
+        )
         require_peaks_present(
             np.unique(peaks),
             peaks_rounded,
@@ -149,7 +169,9 @@ def _run_dplms_step(db_key: str, ene_par: str) -> None:
         log.debug("Cuts are %s", cut_dict)
         idxs = np.full(len(dsp_fft), True, dtype=bool)
         for outname, info in cut_dict.items():
-            outcol = dsp_fft.eval(info["expression"], info.get("parameters", None))
+            outcol = dsp_fft.eval(
+                info["expression"], info.get("parameters", None)
+            )
             dsp_fft.add_column(outname, outcol)
         for cut in cut_dict:
             idxs = dsp_fft[cut].nda & idxs

@@ -8,7 +8,11 @@ import lh5
 from dbetto.catalog import Props
 from sklearn.svm import SVC
 
-from ....utils import build_log, check_input_files, prepare_output_paths
+from legenddataflowscripts.utils import (
+    build_log,
+    check_input_files,
+    prepare_output_paths,
+)
 
 
 def par_geds_dsp_svm_build() -> None:
@@ -46,7 +50,11 @@ def par_geds_dsp_svm_build() -> None:
     argparser.add_argument("--log", help="log file", type=str)
 
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
@@ -56,7 +64,10 @@ def par_geds_dsp_svm_build() -> None:
         "--train-data", help="input data file", nargs="*", default=None
     )
     argparser.add_argument(
-        "--train-hyperpars", help="input hyperparameter file", nargs="*", default=None
+        "--train-hyperpars",
+        help="input hyperparameter file",
+        nargs="*",
+        default=None,
     )
     args = argparser.parse_args()
 

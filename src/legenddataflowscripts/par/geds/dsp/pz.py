@@ -13,7 +13,7 @@ from dspeed import build_dsp
 from pygama.pargen.data_cleaning import get_cut_indexes
 from pygama.pargen.pz_correct import PZCorrect
 
-from ....utils import (
+from legenddataflowscripts.utils import (
     build_log,
     check_pulser_mask,
     convert_dict_np_to_float,
@@ -88,22 +88,34 @@ def par_geds_dsp_pz() -> None:
         "--config-file", help="Config file", type=str, nargs="*", required=True
     )
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
         "--raw-table-name", help="raw table name", type=str, required=True
     )
 
-    argparser.add_argument("--plot-path", help="plot path", type=str, required=False)
-    argparser.add_argument("--output-file", help="output file", type=str, required=True)
+    argparser.add_argument(
+        "--plot-path", help="plot path", type=str, required=False
+    )
+    argparser.add_argument(
+        "--output-file", help="output file", type=str, required=True
+    )
 
     argparser.add_argument(
         "--pulser-file", help="pulser file", type=str, required=False
     )
 
-    argparser.add_argument("--raw-files", help="input files", nargs="*", type=str)
-    argparser.add_argument("--pz-files", help="input files", nargs="*", type=str)
+    argparser.add_argument(
+        "--raw-files", help="input files", nargs="*", type=str
+    )
+    argparser.add_argument(
+        "--pz-files", help="input files", nargs="*", type=str
+    )
     args = argparser.parse_args()
 
     log = build_log(args.log_config, args.log)
@@ -111,7 +123,9 @@ def par_geds_dsp_pz() -> None:
     prepare_output_paths(args.output_file, args.plot_path)
 
     kwarg_dict = Props.read_from(args.config_file)
-    require_config_keys(kwarg_dict, ["run_tau"], f"pz config ({args.config_file})")
+    require_config_keys(
+        kwarg_dict, ["run_tau"], f"pz config ({args.config_file})"
+    )
 
     if kwarg_dict["run_tau"] is True:
         require_config_keys(
@@ -123,7 +137,10 @@ def par_geds_dsp_pz() -> None:
         # back to the raw files
         input_file = []
         if args.pz_files:
-            if len(args.pz_files) == 1 and Path(args.pz_files[0]).suffix == ".filelist":
+            if (
+                len(args.pz_files) == 1
+                and Path(args.pz_files[0]).suffix == ".filelist"
+            ):
                 with Path(args.pz_files[0]).open() as f:
                     input_file = [line for line in map(str.strip, f) if line]
             else:
@@ -163,7 +180,15 @@ def par_geds_dsp_pz() -> None:
         msg = f"{len(cuts)} events passed threshold and pulser cuts"
         log.debug(msg)
         log.debug(cuts)
-        del data, daqenergy, timestamps, t_sat_lo, mask, is_recovering, discharges
+        del (
+            data,
+            daqenergy,
+            timestamps,
+            t_sat_lo,
+            mask,
+            is_recovering,
+            discharges,
+        )
         del discharge_timestamps
         tb_data = lh5.read(
             args.raw_table_name,
@@ -180,7 +205,9 @@ def par_geds_dsp_pz() -> None:
         if "frac" in dsp_config["outputs"]:
             dsp_config_optimise_removed["outputs"].remove("frac")
 
-        tb_out = build_dsp(raw_in=tb_data, dsp_config=dsp_config_optimise_removed)
+        tb_out = build_dsp(
+            raw_in=tb_data, dsp_config=dsp_config_optimise_removed
+        )
         log.debug("Processed Data")
         cut_parameters = kwarg_dict.get("cut_parameters", None)
         if cut_parameters is not None:
@@ -198,7 +225,9 @@ def par_geds_dsp_pz() -> None:
             # array in case that ever changes
             if sel.dtype == np.bool_:
                 sel = np.flatnonzero(sel)
-            tb_data = take_table_rows(tb_data, sel[: kwarg_dict.pop("n_events")])
+            tb_data = take_table_rows(
+                tb_data, sel[: kwarg_dict.pop("n_events")]
+            )
 
         tau = PZCorrect(
             dsp_config,
@@ -242,7 +271,10 @@ def par_geds_dsp_pz() -> None:
                 tb_data,
                 kwarg_dict.get("wf_pz_field", "wf_pz"),
                 norm_param=kwarg_dict.get("norm_param", "pz_mean"),
-                xlim=[400, len(tb_data[kwarg_dict["wf_field"]]["values"].nda[0])],
+                xlim=[
+                    400,
+                    len(tb_data[kwarg_dict["wf_field"]]["values"].nda[0]),
+                ],
                 ylim=[0.8, 1.1],
             )
 
@@ -255,7 +287,9 @@ def par_geds_dsp_pz() -> None:
             )
             plot_dict.update(
                 tau.plot_slopes(
-                    tb_data, kwarg_dict.get("final_slope_param", "pz_slope"), True
+                    tb_data,
+                    kwarg_dict.get("final_slope_param", "pz_slope"),
+                    True,
                 )
             )
 

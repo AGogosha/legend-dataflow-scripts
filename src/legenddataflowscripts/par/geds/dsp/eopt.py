@@ -20,7 +20,7 @@ from pygama.pargen.dsp_optimize import (
     run_bayesian_optimisation,
 )
 
-from ....utils import (
+from legenddataflowscripts.utils import (
     build_log,
     check_input_files,
     prepare_output_paths,
@@ -93,8 +93,12 @@ def par_geds_dsp_eopt() -> None:
     """
     argparser = argparse.ArgumentParser()
 
-    argparser.add_argument("--peak-file", help="tcm_filelist", type=str, required=True)
-    argparser.add_argument("--decay-const", help="decay_const", type=str, required=True)
+    argparser.add_argument(
+        "--peak-file", help="tcm_filelist", type=str, required=True
+    )
+    argparser.add_argument(
+        "--decay-const", help="decay_const", type=str, required=True
+    )
     argparser.add_argument("--inplots", help="in_plot_path", type=str)
 
     argparser.add_argument("--log", help="log_file", type=str)
@@ -110,7 +114,11 @@ def par_geds_dsp_eopt() -> None:
         "--config-file", help="Config file", type=str, nargs="*", required=True
     )
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
@@ -134,7 +142,9 @@ def par_geds_dsp_eopt() -> None:
 
     check_input_files(args.peak_file, "--peak-file")
     check_input_files(args.inplots, "--inplots")
-    prepare_output_paths(args.qbb_grid_path, args.final_dsp_pars, args.plot_path)
+    prepare_output_paths(
+        args.qbb_grid_path, args.final_dsp_pars, args.plot_path
+    )
 
     dsp_config = Props.read_from(args.processing_chain)
 
@@ -142,7 +152,9 @@ def par_geds_dsp_eopt() -> None:
 
     opt_dict = Props.read_from(args.config_file)
     db_dict = Props.read_from(args.decay_const)
-    require_config_keys(opt_dict, ["run_eopt"], f"eopt config ({args.config_file})")
+    require_config_keys(
+        opt_dict, ["run_eopt"], f"eopt config ({args.config_file})"
+    )
 
     run_eopt = opt_dict.pop("run_eopt") is True
     if run_eopt:
@@ -184,7 +196,9 @@ def par_geds_dsp_eopt() -> None:
             )
 
         peaks_rounded = [int(peak) for peak in peaks_kev]
-        peaks = lh5.read_as(f"{args.raw_table_name}/peak", args.peak_file, library="np")
+        peaks = lh5.read_as(
+            f"{args.raw_table_name}/peak", args.peak_file, library="np"
+        )
         require_peaks_present(
             np.unique(peaks),
             peaks_rounded,
@@ -202,8 +216,12 @@ def par_geds_dsp_eopt() -> None:
 
         dsp_config["outputs"] = ["tp_99", "tp_0_est", "dt_eff"]
 
-        init_data = build_dsp(raw_in=tb_data, dsp_config=dsp_config, database=db_dict)
-        full_dt = (init_data["tp_99"].nda - init_data["tp_0_est"].nda)[idx_list[-1]]
+        init_data = build_dsp(
+            raw_in=tb_data, dsp_config=dsp_config, database=db_dict
+        )
+        full_dt = (init_data["tp_99"].nda - init_data["tp_0_est"].nda)[
+            idx_list[-1]
+        ]
         flat_val = np.ceil(1.1 * np.nanpercentile(full_dt, 99) / 100) / 10
 
         if flat_val < opt_dict.get("min_flat_value", 1):
@@ -281,7 +299,9 @@ def par_geds_dsp_eopt() -> None:
             msg = f"Initialising values {i + 1} : {db_dict}"
             log.info(msg)
 
-            tb_out = build_dsp(raw_in=tb_data, dsp_config=dsp_config, database=db_dict)
+            tb_out = build_dsp(
+                raw_in=tb_data, dsp_config=dsp_config, database=db_dict
+            )
 
             res = fom(tb_out, kwarg_dict[0])
             results_cusp.append(res)
@@ -421,32 +441,44 @@ def par_geds_dsp_eopt() -> None:
         out_alpha_dict = {}
         out_alpha_dict["cuspEmax_ctc"] = {
             "expression": "cuspEmax*(1+dt_eff*a)",
-            "parameters": {"a": float(round(bopt_cusp.optimal_results["alpha"], 9))},
+            "parameters": {
+                "a": float(round(bopt_cusp.optimal_results["alpha"], 9))
+            },
         }
 
         out_alpha_dict["cuspEftp_ctc"] = {
             "expression": "cuspEftp*(1+dt_eff*a)",
-            "parameters": {"a": float(round(bopt_cusp.optimal_results["alpha"], 9))},
+            "parameters": {
+                "a": float(round(bopt_cusp.optimal_results["alpha"], 9))
+            },
         }
 
         out_alpha_dict["zacEmax_ctc"] = {
             "expression": "zacEmax*(1+dt_eff*a)",
-            "parameters": {"a": float(round(bopt_zac.optimal_results["alpha"], 9))},
+            "parameters": {
+                "a": float(round(bopt_zac.optimal_results["alpha"], 9))
+            },
         }
 
         out_alpha_dict["zacEftp_ctc"] = {
             "expression": "zacEftp*(1+dt_eff*a)",
-            "parameters": {"a": float(round(bopt_zac.optimal_results["alpha"], 9))},
+            "parameters": {
+                "a": float(round(bopt_zac.optimal_results["alpha"], 9))
+            },
         }
 
         out_alpha_dict["trapEmax_ctc"] = {
             "expression": "trapEmax*(1+dt_eff*a)",
-            "parameters": {"a": float(round(bopt_trap.optimal_results["alpha"], 9))},
+            "parameters": {
+                "a": float(round(bopt_trap.optimal_results["alpha"], 9))
+            },
         }
 
         out_alpha_dict["trapEftp_ctc"] = {
             "expression": "trapEftp*(1+dt_eff*a)",
-            "parameters": {"a": float(round(bopt_trap.optimal_results["alpha"], 9))},
+            "parameters": {
+                "a": float(round(bopt_trap.optimal_results["alpha"], 9))
+            },
         }
         if "ctc_params" in db_dict:
             db_dict["ctc_params"].update(out_alpha_dict)

@@ -13,7 +13,7 @@ from dbetto.catalog import Props
 from dspeed import build_dsp
 from pygama.pargen.data_cleaning import generate_cuts, get_cut_indexes
 
-from ....utils import (
+from legenddataflowscripts.utils import (
     build_log,
     check_input_files,
     expand_filelist,
@@ -65,7 +65,9 @@ def par_geds_dsp_nopt() -> None:
     """
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--raw-filelist", help="raw_filelist", type=str)
-    argparser.add_argument("--database", help="database", type=str, required=True)
+    argparser.add_argument(
+        "--database", help="database", type=str, required=True
+    )
     argparser.add_argument("--inplots", help="inplots", type=str)
 
     argparser.add_argument("--log", help="log_file", type=str)
@@ -81,14 +83,20 @@ def par_geds_dsp_nopt() -> None:
         "--config-file", help="Config file", type=str, nargs="*", required=True
     )
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
         "--raw-table-name", help="raw table name", type=str, required=True
     )
 
-    argparser.add_argument("--dsp-pars", help="dsp_pars", type=str, required=True)
+    argparser.add_argument(
+        "--dsp-pars", help="dsp_pars", type=str, required=True
+    )
     argparser.add_argument("--plot-path", help="plot_path", type=str)
 
     args = argparser.parse_args()
@@ -104,7 +112,9 @@ def par_geds_dsp_nopt() -> None:
 
     opt_dict = Props.read_from(args.config_file)
     db_dict = Props.read_from(args.database)
-    require_config_keys(opt_dict, ["run_nopt"], f"nopt config ({args.config_file})")
+    require_config_keys(
+        opt_dict, ["run_nopt"], f"nopt config ({args.config_file})"
+    )
 
     if opt_dict.pop("run_nopt") is True:
         raw_files = expand_filelist([args.raw_filelist], "--raw-filelist")
@@ -115,7 +125,10 @@ def par_geds_dsp_nopt() -> None:
         idxs = np.where(energies <= 10)[0]
         del energies
         tb_data = lh5.read(
-            args.raw_table_name, raw_files, n_rows=opt_dict["n_events"], idx=idxs
+            args.raw_table_name,
+            raw_files,
+            n_rows=opt_dict["n_events"],
+            idx=idxs,
         )
         t1 = time.time()
         msg = f"Time to open raw files {t1 - t0:.2f} s, n. baselines {len(tb_data)}"
@@ -152,7 +165,11 @@ def par_geds_dsp_nopt() -> None:
             )
         else:
             out_dict = pno.noise_optimization(
-                tb_data, dsp_config, db_dict.copy(), opt_dict, args.raw_table_name
+                tb_data,
+                dsp_config,
+                db_dict.copy(),
+                opt_dict,
+                args.raw_table_name,
             )
 
         t2 = time.time()

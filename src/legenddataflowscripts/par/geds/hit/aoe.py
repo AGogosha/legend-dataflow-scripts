@@ -17,7 +17,7 @@ from pygama.pargen.AoE_cal import *
 from pygama.pargen.AoE_cal import CalAoE
 from pygama.pargen.utils import load_data
 
-from ....utils import (
+from legenddataflowscripts.utils import (
     build_log,
     check_pulser_mask,
     convert_dict_np_to_float,
@@ -64,10 +64,12 @@ def get_results_dict(aoe_class):
             "high_cut": aoe_class.high_cut_val,
             "low_side_sfs": aoe_class.low_side_sfs.to_dict("index"),
             "2_side_sfs": aoe_class.two_side_sfs.to_dict("index"),
-            "low_side_sfs_by_run": aoe_class.low_side_sfs_by_run[tstamp].to_dict(
+            "low_side_sfs_by_run": aoe_class.low_side_sfs_by_run[
+                tstamp
+            ].to_dict("index"),
+            "2_side_sfs_by_run": aoe_class.two_side_sfs_by_run[tstamp].to_dict(
                 "index"
             ),
-            "2_side_sfs_by_run": aoe_class.two_side_sfs_by_run[tstamp].to_dict("index"),
         }
     return result_dict
 
@@ -176,7 +178,9 @@ def run_aoe_calibration(
                 )
 
                 def eres_func(x):
-                    return eval(eres["expression"], dict(x=x, **eres["parameters"]))
+                    return eval(
+                        eres["expression"], dict(x=x, **eres["parameters"])
+                    )
 
             except KeyError:
 
@@ -188,8 +192,13 @@ def run_aoe_calibration(
         # differ at machine-precision level. Needs a pygama version with
         # use_log_pdf support; fall back silently on older versions.
         use_log_pdf = config.get("use_log_pdf", False)
-        if use_log_pdf and "use_log_pdf" not in inspect.signature(CalAoE).parameters:
-            log.warning("installed pygama does not support use_log_pdf, ignoring")
+        if (
+            use_log_pdf
+            and "use_log_pdf" not in inspect.signature(CalAoE).parameters
+        ):
+            log.warning(
+                "installed pygama does not support use_log_pdf, ignoring"
+            )
             use_log_pdf = False
 
         for name, param_config in config["params"].items():
@@ -219,9 +228,12 @@ def run_aoe_calibration(
                 )
 
             suffix = param_config.get("suffix", None)
-            initial_param = "AoE_Uncorr" if suffix is None else f"AoE_Uncorr_{suffix}"
+            initial_param = (
+                "AoE_Uncorr" if suffix is None else f"AoE_Uncorr_{suffix}"
+            )
             data[initial_param] = (
-                data[param_config["current_param"]] / data[param_config["energy_param"]]
+                data[param_config["current_param"]]
+                / data[param_config["energy_param"]]
             )
 
             start = time.time()
@@ -288,7 +300,8 @@ def run_aoe_calibration(
     out_result_dicts = {}
     for tstamp, result_dict in results_dicts.items():
         out_result_dicts[tstamp] = dict(
-            **result_dict, aoe={name: d[tstamp] for name, d in out_dicts.items()}
+            **result_dict,
+            aoe={name: d[tstamp] for name, d in out_dicts.items()},
         )
 
     out_object_dicts = {}
@@ -369,9 +382,15 @@ def par_geds_hit_aoe() -> None:
         "--tcm-filelist", help="tcm_filelist", type=str, required=False
     )
 
-    argparser.add_argument("--ecal-file", help="ecal_file", type=str, required=True)
-    argparser.add_argument("--eres-file", help="eres_file", type=str, required=True)
-    argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
+    argparser.add_argument(
+        "--ecal-file", help="ecal_file", type=str, required=True
+    )
+    argparser.add_argument(
+        "--eres-file", help="eres_file", type=str, required=True
+    )
+    argparser.add_argument(
+        "--inplots", help="in_plot_path", type=str, required=False
+    )
 
     argparser.add_argument(
         "--timestamp",
@@ -383,25 +402,35 @@ def par_geds_hit_aoe() -> None:
 
     argparser.add_argument("--log", help="log_file", type=str)
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
         "--config-file", help="Config file", type=str, nargs="*", required=True
     )
 
-    argparser.add_argument("--table-name", help="table name", type=str, required=True)
+    argparser.add_argument(
+        "--table-name", help="table name", type=str, required=True
+    )
 
     argparser.add_argument("--detector", help="detector name", type=str)
     argparser.add_argument(
         "--override-files", help="override files", nargs="*", type=str
     )
 
-    argparser.add_argument("--plot-file", help="plot_file", type=str, required=False)
+    argparser.add_argument(
+        "--plot-file", help="plot_file", type=str, required=False
+    )
     argparser.add_argument("--hit-pars", help="hit_pars", type=str)
     argparser.add_argument("--aoe-results", help="aoe_results", type=str)
 
-    argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
+    argparser.add_argument(
+        "-d", "--debug", help="debug_mode", action="store_true"
+    )
     args = argparser.parse_args()
 
     log = build_log(args.log_config, args.log)
@@ -409,7 +438,9 @@ def par_geds_hit_aoe() -> None:
     prepare_output_paths(args.plot_file, args.hit_pars, args.aoe_results)
 
     kwarg_dict = Props.read_from(args.config_file)
-    require_config_keys(kwarg_dict, ["run_aoe"], f"aoe config ({args.config_file})")
+    require_config_keys(
+        kwarg_dict, ["run_aoe"], f"aoe config ({args.config_file})"
+    )
 
     ecal_dict = Props.read_from(args.ecal_file)
     cal_dict = ecal_dict["pars"]

@@ -17,7 +17,7 @@ from dbetto.catalog import Props
 from dspeed import build_dsp
 from pygama.pargen.data_cleaning import generate_cuts, get_keys
 
-from ....utils import (
+from legenddataflowscripts.utils import (
     build_log,
     check_pulser_mask,
     expand_filelist,
@@ -123,11 +123,15 @@ def get_out_data(
             "timestamp": lgdo.Array(raw_data["timestamp"].nda[final_mask]),
             "baseline": lgdo.Array(raw_data["baseline"].nda[final_mask]),
             "daqenergy": lgdo.Array(raw_data["daqenergy"].nda[final_mask]),
-            "daqenergy_cal": lgdo.Array(raw_data["daqenergy_cal"].nda[final_mask]),
+            "daqenergy_cal": lgdo.Array(
+                raw_data["daqenergy_cal"].nda[final_mask]
+            ),
             "trapTmax_cal": lgdo.Array(
                 dsp_data["trapTmax"].nda[final_mask] * ecal_pars
             ),
-            "peak": lgdo.Array(np.full(int(np.count_nonzero(final_mask)), int(peak))),
+            "peak": lgdo.Array(
+                np.full(int(np.count_nonzero(final_mask)), int(peak))
+            ),
         }
     )
     return out_tbl, int(np.count_nonzero(final_mask))
@@ -252,7 +256,9 @@ def par_geds_dsp_evtsel() -> None:
         Output LH5 file path for selected peak events.
     """
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--raw-filelist", help="raw_filelist", type=str, nargs="*")
+    argparser.add_argument(
+        "--raw-filelist", help="raw_filelist", type=str, nargs="*"
+    )
     argparser.add_argument(
         "--pulser-file", help="pulser-file", type=str, required=False
     )
@@ -260,7 +266,9 @@ def par_geds_dsp_evtsel() -> None:
         "-p", "--no-pulse", help="no pulser present", action="store_true"
     )
 
-    argparser.add_argument("--decay-const", help="decay_const", type=str, required=True)
+    argparser.add_argument(
+        "--decay-const", help="decay_const", type=str, required=True
+    )
     argparser.add_argument(
         "--raw-cal-curve",
         help="raw calibration curve file(s)",
@@ -288,14 +296,20 @@ def par_geds_dsp_evtsel() -> None:
         "--config-file", help="Config file", type=str, nargs="*", required=True
     )
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
         "--raw-table-name", help="raw table name", type=str, required=True
     )
 
-    argparser.add_argument("--peak-file", help="peak_file", type=str, required=True)
+    argparser.add_argument(
+        "--peak-file", help="peak_file", type=str, required=True
+    )
     args = argparser.parse_args()
 
     log = build_log(args.log_config, args.log)
@@ -316,7 +330,13 @@ def par_geds_dsp_evtsel() -> None:
         log.debug("Starting peak selection")
         require_config_keys(
             peak_dict,
-            ["peaks", "kev_widths", "cut_parameters", "n_events", "final_cut_field"],
+            [
+                "peaks",
+                "kev_widths",
+                "cut_parameters",
+                "n_events",
+                "final_cut_field",
+            ],
             f"evtsel config ({args.config_file})",
         )
 
@@ -340,7 +360,9 @@ def par_geds_dsp_evtsel() -> None:
         energy_field = peak_dict.get("energy_param", "daqenergy")
 
         tb = lh5.read(
-            lh5_path, raw_files, field_mask=[energy_field, "t_sat_lo", "timestamp"]
+            lh5_path,
+            raw_files,
+            field_mask=[energy_field, "t_sat_lo", "timestamp"],
         )
 
         if args.no_pulse is False:
@@ -369,7 +391,9 @@ def par_geds_dsp_evtsel() -> None:
         else:
             E_uncal = tb[energy_field].nda
             E_uncal = E_uncal[E_uncal > 200]
-            guess_keV = 2620 / np.nanpercentile(E_uncal, 99)  # usual simple guess
+            guess_keV = 2620 / np.nanpercentile(
+                E_uncal, 99
+            )  # usual simple guess
 
             # daqenergy is an int so use integer binning (dx used to be bugged as output so switched to nbins)
 
@@ -424,7 +448,9 @@ def par_geds_dsp_evtsel() -> None:
         ]
 
         log.debug("Processing data")
-        tb_data = build_dsp(raw_in=input_data, dsp_config=dsp_config, database=db_dict)
+        tb_data = build_dsp(
+            raw_in=input_data, dsp_config=dsp_config, database=db_dict
+        )
 
         if cut_parameters is not None:
             cut_dict = generate_cuts(tb_data, cut_parameters)
@@ -447,7 +473,9 @@ def par_geds_dsp_evtsel() -> None:
                 if peak_dict["idxs"] is not None:
                     # find the length of the subset of idx that contains indices
                     # that are less than n_rows_i
-                    n_rows_to_read_i = bisect_left(peak_dict["idxs"][0], n_rows_i)
+                    n_rows_to_read_i = bisect_left(
+                        peak_dict["idxs"][0], n_rows_i
+                    )
                     # now split idx into idx_i and the remainder
                     idx_i = (peak_dict["idxs"][0][:n_rows_to_read_i],)
                     peak_dict["idxs"] = (
@@ -468,7 +496,10 @@ def par_geds_dsp_evtsel() -> None:
                         msg = f"{peak}: {peak_dict['n_rows_read']}"
                         log.debug(msg)
                         peak_dict["obj_buf_start"] += n_rows_read_i
-                    if peak_dict["n_rows_read"] >= 10000 or file == raw_files[-1]:
+                    if (
+                        peak_dict["n_rows_read"] >= 10000
+                        or file == raw_files[-1]
+                    ):
                         if (
                             peak_dict["obj_buf"] is None
                             or len(peak_dict["obj_buf"]) == 0
@@ -484,7 +515,9 @@ def par_geds_dsp_evtsel() -> None:
                             energy = tb_out[energy_parameter].nda
 
                             init_bin_width = initial_bin_width(energy)
-                            if init_bin_width is None:  # too few events to histogram
+                            if (
+                                init_bin_width is None
+                            ):  # too few events to histogram
                                 msg = (
                                     f"{peak}: only {np.isfinite(energy).sum()} "
                                     "usable events, skipping peak"
@@ -503,7 +536,9 @@ def par_geds_dsp_evtsel() -> None:
                                 ),
                                 dx=init_bin_width,
                             )
-                            peak_loc = pgh.get_bin_centers(bins)[np.nanargmax(hist)]
+                            peak_loc = pgh.get_bin_centers(bins)[
+                                np.nanargmax(hist)
+                            ]
 
                             peak_top_pars = pgc.hpge_fit_energy_peak_tops(
                                 hist,
@@ -536,14 +571,20 @@ def par_geds_dsp_evtsel() -> None:
                                     range=(int(e_lower_lim), int(e_upper_lim)),
                                     dx=init_bin_width,
                                 )
-                                mu = pgh.get_bin_centers(bins)[np.nanargmax(hist)]
+                                mu = pgh.get_bin_centers(bins)[
+                                    np.nanargmax(hist)
+                                ]
 
                             updated_adc_to_kev = peak / mu
                             e_lower_lim = (
-                                mu - (peak_dict["kev_width"][0]) / updated_adc_to_kev
+                                mu
+                                - (peak_dict["kev_width"][0])
+                                / updated_adc_to_kev
                             )
                             e_upper_lim = (
-                                mu + (peak_dict["kev_width"][1]) / updated_adc_to_kev
+                                mu
+                                + (peak_dict["kev_width"][1])
+                                / updated_adc_to_kev
                             )
                             msg = f"{peak}: lower lim is :{e_lower_lim}, upper lim is {e_upper_lim}"
                             log.info(msg)
@@ -605,9 +646,7 @@ def par_geds_dsp_evtsel() -> None:
                             log.debug(msg)
                             if peak_dict["n_events"] >= n_events:
                                 peak_dict["idxs"] = None
-                                msg = (
-                                    f"{peak} has reached the required number of events"
-                                )
+                                msg = f"{peak} has reached the required number of events"
                                 log.debug(msg)
 
     else:

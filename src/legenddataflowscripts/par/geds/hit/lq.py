@@ -19,7 +19,7 @@ from pygama.pargen.lq_cal import *
 from pygama.pargen.lq_cal import LQCal
 from pygama.pargen.utils import load_data
 
-from ....utils import (
+from legenddataflowscripts.utils import (
     build_log,
     check_pulser_mask,
     convert_dict_np_to_float,
@@ -163,8 +163,15 @@ def lq_calibration(
         }
     )
 
-    lq.calibrate(data, initial_param, **({} if suffix is None else {"suffix": suffix}))
-    return cal_dicts, get_results_dict(lq), fill_plot_dict(lq, data, plot_options), lq
+    lq.calibrate(
+        data, initial_param, **({} if suffix is None else {"suffix": suffix})
+    )
+    return (
+        cal_dicts,
+        get_results_dict(lq),
+        fill_plot_dict(lq, data, plot_options),
+        lq,
+    )
 
 
 def run_lq_calibration(
@@ -263,7 +270,9 @@ def run_lq_calibration(
                 )
 
                 def eres_func(x):
-                    return eval(eres["expression"], dict(x=x, **eres["parameters"]))
+                    return eval(
+                        eres["expression"], dict(x=x, **eres["parameters"])
+                    )
 
             except KeyError:
 
@@ -325,7 +334,9 @@ def run_lq_calibration(
     for tstamp, object_dict in object_dicts.items():
         out_object_dicts[tstamp] = dict(**object_dict, lq=lq_objs)
 
-    common_dict = lq_plot_dict.pop("common") if "common" in list(lq_plot_dict) else None
+    common_dict = (
+        lq_plot_dict.pop("common") if "common" in list(lq_plot_dict) else None
+    )
     out_plot_dicts = {}
     for tstamp, plot_dict in plot_dicts.items():
         if "common" in list(plot_dict) and common_dict is not None:
@@ -397,20 +408,32 @@ def par_geds_hit_lq() -> None:
         "--tcm-filelist", help="tcm_filelist", type=str, required=False
     )
 
-    argparser.add_argument("--ecal-file", help="ecal_file", type=str, required=True)
-    argparser.add_argument("--eres-file", help="eres_file", type=str, required=True)
-    argparser.add_argument("--inplots", help="in_plot_path", type=str, required=False)
+    argparser.add_argument(
+        "--ecal-file", help="ecal_file", type=str, required=True
+    )
+    argparser.add_argument(
+        "--eres-file", help="eres_file", type=str, required=True
+    )
+    argparser.add_argument(
+        "--inplots", help="in_plot_path", type=str, required=False
+    )
 
     argparser.add_argument("--log", help="log_file", type=str)
     argparser.add_argument(
-        "--log-config", help="Log config file", type=str, required=False, default={}
+        "--log-config",
+        help="Log config file",
+        type=str,
+        required=False,
+        default={},
     )
 
     argparser.add_argument(
         "--config-file", help="Config file", type=str, nargs="*", required=True
     )
 
-    argparser.add_argument("--table-name", help="table name", type=str, required=True)
+    argparser.add_argument(
+        "--table-name", help="table name", type=str, required=True
+    )
     argparser.add_argument(
         "--timestamp",
         help="timestamp",
@@ -419,11 +442,15 @@ def par_geds_hit_lq() -> None:
         default="20000101T000000Z",
     )
 
-    argparser.add_argument("--plot-file", help="plot_file", type=str, required=False)
+    argparser.add_argument(
+        "--plot-file", help="plot_file", type=str, required=False
+    )
     argparser.add_argument("--hit-pars", help="hit_pars", type=str)
     argparser.add_argument("--lq-results", help="lq_results", type=str)
 
-    argparser.add_argument("-d", "--debug", help="debug_mode", action="store_true")
+    argparser.add_argument(
+        "-d", "--debug", help="debug_mode", action="store_true"
+    )
     args = argparser.parse_args()
 
     build_log(args.log_config, args.log)
@@ -431,7 +458,9 @@ def par_geds_hit_lq() -> None:
     prepare_output_paths(args.plot_file, args.hit_pars, args.lq_results)
 
     kwarg_dict = Props.read_from(args.config_file)
-    require_config_keys(kwarg_dict, ["run_lq"], f"lq config ({args.config_file})")
+    require_config_keys(
+        kwarg_dict, ["run_lq"], f"lq config ({args.config_file})"
+    )
 
     ecal_dict = Props.read_from(args.ecal_file)
     cal_dict = ecal_dict["pars"]["operations"]
